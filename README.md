@@ -26,20 +26,24 @@ docker compose up --build
 - API: http://localhost:5000/api/messages
 - Frontend: http://localhost:3000
 
-## Before changing anything
+## Production compose
 
-1. Open `docker-compose.yml` and trace how each service currently starts.
-2. Identify where PostgreSQL writes data inside its container.
-3. Check which services genuinely need to communicate with each other.
-4. Notice which development behaviour should not belong in the main Compose file.
+The main `docker-compose.yml` keeps the app in a clean, production-oriented topology:
 
-Use the assignment brief's expected behaviours as your completion checklist. Choose the required Compose configuration yourself.
+- `db` uses a named Docker volume to persist PostgreSQL data.
+- `db` is only connected to the private `backend` network.
+- `api` is connected to both the `backend` and `app` networks so it can reach the database and serve the browser.
+- `web` is connected only to the `app` network.
+- `db` is not published to the host, so external clients cannot connect directly to PostgreSQL.
 
-Validate the final configuration with:
+## Development hot-reload
+
+Use the development override file when working locally:
 
 ```bash
-docker compose config -q
-docker compose up --build
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
+
+This mounts the host working tree into the API container and starts the app with `nodemon`, while keeping the container's `node_modules` protected from host binaries.
 
 Do not commit `.env` or `node_modules`.
